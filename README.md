@@ -3,6 +3,8 @@ Shiro OAuth Grails Plugin
 
 [Shiro](http://shiro.apache.org/) is a flexible authentication and authorisation framework for Java that has a corresponding [Grails plugin](http://grails.org/plugin/shiro) for simplifying access control in Grails applications. This plugin extends the base Shiro plugin with support for authentication via OAuth using the [Scribe OAuth plugin](http://grails.org/plugin/oauth-scribe).
 
+To use the plugin check out [its documentation](http://pledbrook.github.com/grails-shiro-oauth/).
+
 How it works
 ------------
 
