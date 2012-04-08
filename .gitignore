@@ -1,4 +1,5 @@
 .settings/
+/docs/
 grails-shiro-oauth-*.zip*
 plugin.xml
 target/
