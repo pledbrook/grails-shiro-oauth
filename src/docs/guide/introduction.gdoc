@@ -1,0 +1,72 @@
+Welcome to the Shiro OAuth plugin for Grails! If you're using the [core Shiro plugin|http://grails.org/plugin/shiro] in your application already and you want easy authentication via Twitter, Facebook, et al. then this is the plugin for you. It simplifies the integration of OAuth authentication via the [Scribe OAuth plugin|http://grails.org/plugin/oauth-scribe] into the Shiro security framework.
+
+h2. Getting Started
+
+Start by adding the plugin as a dependency to @BuildConfig.groovy@:
+
+{code}
+plugins {
+    compile ":shiro-oauth:0.1-SNAPSHOT"
+}
+{code}
+
+You can find the dependency declaration for the latest version on the [plugin portal page|http://grails.org/plugin/shiro-oauth]. Next up is a little bit of configuration. Add the OAuth provider configuration to your @Config.groovy@ file:
+
+{code}
+oauth {
+    provider = org.scribe.builder.api.TwitterApi
+    key = 'consumer key'
+    secret = 'consumer secret'
+    callback = "${grails.serverURL}/oauth/callback"
+    successUri = '/oauth/success?provider=twitter'
+    failureUri = '/unauthorized'
+}
+
+security {
+    shiro {
+        oauth {
+            linkAccountUrl = "/oauth/linkaccount"
+            providers {
+                twitter = "grails.plugin.shiro.oauth.TwitterOAuthToken"
+            }
+        }
+    }
+}
+{code}
+
+The first block is the configuration for the [Scribe OAuth plugin|http://grails.org/plugin/oauth-scribe] so check its documentation for more details. At this moment in time, the Scribe OAuth plugin only supports one provider at a time, but this plugin only supports Twitter, so that's not a problem. Both limitations will be solved in future versions.
+
+You can put your own URL in there for @successUri@, but make sure that it maps to the @ShiroOAuthController@'s @onSuccess@ action and that the @provider@ URL parameter is included. Use whatever you want for the @failureUri@ setting. The @callback@ URL should map to the @OauthController@'s @callback@ action (note the different captitalisation of the controller name) and must be an absolute URL. For example:
+
+{code}
+"/oauth/success"(controller: "shiroOAuth", action: "onSuccess")
+"/oauth/callback"(controller: "oauth", action: "callback")
+{code}
+
+The second configuration block is specifically for this plugin. The @linkAccountUrl@ should map to a page that allows users to link their OAuth identities to internal Shiro accounts. You can do this by saving a @ShiroOAuthIdentity@ instance with the OAuth principal, the name of the OAuth provider and the ID of the relevant user domain instance. For example:
+
+{code}
+def linkAccount() {
+    def user = ...
+    new ShiroOAuthIdentity(
+            username: session.shiroOAuthToken.principal,
+            provider: session.shiroOAuthToken.providerName,
+            userId: user.id).save()
+    SecurityUtils.subject.login session.shiroAuthToken
+    redirect uri: "/"
+}
+{code}
+
+Once the accounts have been linked, the login will succeed. Note that the Shiro OAuth plugin puts the OAuth authentication token into the session under the key 'shiroAuthToken'. This should be removed from the session after a successful subject.login().
+
+This should improve in the future with a dedicated service that will link accounts, hiding the implementation details of the @ShiroOAuthIdentity@ domain class and the @shiroAuthToken@ session variable.
+
+For the moment, you have to configure the providers yourself. This is a map of OAuth provider names and the associated authentication token class names (as strings). A default set will eventually be provided by this plugin.
+
+Finally, you need to allow the user to log in via an OAuth provider. The easiest way to do this is to add a link to your login page:
+
+{code:xml}
+<oauth:connect>Log in with Twitter</oauth:connect>
+{code}
+
+This tag is provided by the Scribe OAuth plugin. When the user clicks on the link, he or she will be redirected to the configured OAuth provider. If the user already has a linked account, he or she will be automatically logged in. Otherwise, he or she will be taken to the "link an account" page.
