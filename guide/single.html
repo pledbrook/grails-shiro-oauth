@@ -70,7 +70,7 @@ function addJsClass(el) {
 
 <h1 id="introduction">1 Introduction</h1>
 Welcome to the Shiro OAuth plugin for Grails! If you're using the <a href="http://grails.org/plugin/shiro" target="blank">core Shiro plugin</a> in your application already and you want easy authentication via Twitter, Facebook, et al. then this is the plugin for you. It simplifies the integration of OAuth authentication via the <a href="http://grails.org/plugin/oauth-scribe" target="blank">Scribe OAuth plugin</a> into the Shiro security framework.<p class="paragraph"/><h2>Getting Started</h2><p class="paragraph"/>Start by adding the plugin as a dependency to <code>BuildConfig.groovy</code>:<p class="paragraph"/><div class="code"><pre>plugins &#123;
-    compile <span class="java&#45;quote<a href="shiro&#45;oauth:0.1&#45;SNAPSHOT"</span>">></a>
+    compile <span class="java&#45;quote">"&#58;shiro&#45;oauth&#58;0.1&#45;SNAPSHOT"</span>
 &#125;</pre></div><p class="paragraph"/>You can find the dependency declaration for the latest version on the <a href="http://grails.org/plugin/shiro-oauth" target="blank">plugin portal page</a>. Next up is a little bit of configuration. Add the OAuth provider configuration to your <code>Config.groovy</code> file:<p class="paragraph"/><div class="code"><pre>oauth &#123;
     provider = org.scribe.builder.api.TwitterApi
     key = 'consumer key'
