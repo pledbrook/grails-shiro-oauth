@@ -6,7 +6,7 @@ Start by adding the plugin as a dependency to @BuildConfig.groovy@:
 
 {code}
 plugins {
-    compile ":shiro-oauth:0.1-SNAPSHOT"
+    compile "\:shiro-oauth\:0.1"
 }
 {code}
 
@@ -22,19 +22,10 @@ oauth {
     failureUri = '/unauthorized'
 }
 
-security {
-    shiro {
-        oauth {
-            linkAccountUrl = "/oauth/linkaccount"
-            providers {
-                twitter = "grails.plugin.shiro.oauth.TwitterOAuthToken"
-            }
-        }
-    }
-}
+security.shiro.oauth.linkAccountUrl = "/oauth/linkaccount"
 {code}
 
-The first block is the configuration for the [Scribe OAuth plugin|http://grails.org/plugin/oauth-scribe] so check its documentation for more details. At this moment in time, the Scribe OAuth plugin only supports one provider at a time, but this plugin only supports Twitter, so that's not a problem. Both limitations will be solved in future versions.
+The first block is the configuration for the [Scribe OAuth plugin|http://grails.org/plugin/oauth-scribe] so check its documentation for more details. At this moment in time, the Scribe OAuth plugin only supports one provider at a time. This will be resolved in a future version of the plugin.
 
 You can put your own URL in there for @successUri@, but make sure that it maps to the @ShiroOAuthController@'s @onSuccess@ action and that the @provider@ URL parameter is included. Use whatever you want for the @failureUri@ setting. The @callback@ URL should map to the @OauthController@'s @callback@ action (note the different captitalisation of the controller name) and must be an absolute URL. For example:
 
@@ -43,25 +34,18 @@ You can put your own URL in there for @successUri@, but make sure that it maps t
 "/oauth/callback"(controller: "oauth", action: "callback")
 {code}
 
-The second configuration block is specifically for this plugin. The @linkAccountUrl@ should map to a page that allows users to link their OAuth identities to internal Shiro accounts. You can do this by saving a @ShiroOAuthIdentity@ instance with the OAuth principal, the name of the OAuth provider and the ID of the relevant user domain instance. For example:
+The second configuration block is specifically for this plugin. The @linkAccountUrl@ should map to a page that allows users to link their OAuth identities to internal Shiro accounts. You have to code this page yourself, but once you have a reference to an internal Shiro account, be it a new one or an existing one, then you can forward the request to another action provided by the plugin:
 
 {code}
 def linkAccount() {
     def user = ...
-    new ShiroOAuthIdentity(
-            username: session.shiroOAuthToken.principal,
-            provider: session.shiroOAuthToken.providerName,
-            userId: user.id).save()
-    SecurityUtils.subject.login session.shiroAuthToken
-    redirect uri: "/"
+    forward controller: "shiroOAuth", action: "linkAccount", params: [userId: user.id]
 }
 {code}
 
-Once the accounts have been linked, the login will succeed. Note that the Shiro OAuth plugin puts the OAuth authentication token into the session under the key 'shiroAuthToken'. This should be removed from the session after a successful subject.login().
+The above will link the OAuth account to the internal Shiro one automatically and then log the user in (if he or she hasn't already been authenticated by this stage). Finally, it will redirect to the URL specified by either the `targetUri` parameter or if that doesn't exist, the `targetUri` session variable.
 
-This should improve in the future with a dedicated service that will link accounts, hiding the implementation details of the @ShiroOAuthIdentity@ domain class and the @shiroAuthToken@ session variable.
-
-For the moment, you have to configure the providers yourself. This is a map of OAuth provider names and the associated authentication token class names (as strings). A default set will eventually be provided by this plugin.
+If you choose to handle this yourself, note that the Shiro OAuth plugin puts the OAuth authentication token into the session under the key 'shiroAuthToken'. This should be removed from the session after a successful `subject.login()`.
 
 Finally, you need to allow the user to log in via an OAuth provider. The easiest way to do this is to add a link to your login page:
 

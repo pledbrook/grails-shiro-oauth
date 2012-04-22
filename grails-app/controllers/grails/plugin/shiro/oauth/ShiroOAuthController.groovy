@@ -35,17 +35,12 @@ class ShiroOAuthController {
      * the page and provide the associated URL via the
      * <tt>security.shio.oauth.linkAccountUrl</tt> configuration setting.
      */
-    def onSuccess() {
+    def onSuccess = {
         // Validate the 'provider' URL. Any errors here are either misconfiguration
         // or web crawlers (or malicious users).
         def oauthConfig = grailsApplication.config.security.shiro.oauth
         if (!params.provider) {
             renderError 400, "The Shiro OAuth callback URL must include the 'provider' URL parameter."
-            return
-        }
-
-        if (!oauthConfig.providers.containsKey(params.provider)) {
-            renderError 400, "Unrecognised provider '${params.provider}'"
             return
         }
 
@@ -55,13 +50,14 @@ class ShiroOAuthController {
         }
 
         // Create the relevant authentication token and attempt to log in.
-        def authToken = getProviderClass(oauthConfig, params.provider).newInstance(session[TOKEN_KEY])
+        def authToken = createAuthToken(params.provider, session[TOKEN_KEY])
         def targetUri = params.targetUri ?: session.targetUri
 
         try {
             SecurityUtils.subject.login authToken
 
-            // Login successful, so don't need targetUri in session any more.
+            // Login successful, so don't need targetUri in session any more. It
+            // may not be in the session, but then removeAttribute() does nothing.
             session.removeAttribute "targetUri"
             redirect uri: targetUri
         }
@@ -69,12 +65,36 @@ class ShiroOAuthController {
             // This OAuth account hasn't been registered against an internal
             // account yet. Give the user the opportunity to create a new
             // internal account or link to an existing one.
-            session.shiroAuthToken = authToken
+            session["shiroAuthToken"] = authToken
 
             def redirectUrl = oauthConfig.linkAccountUrl
+            assert redirectUrl, "security.shiro.oauth.linkAccountUrl configuration option must be set!"
             log.debug "Redirecting to link account URL: ${redirectUrl}"
             redirect(redirectUrl instanceof Map ? redirectUrl : [uri: redirectUrl])
         }
+    }
+
+    def linkAccount = {
+        if (!params.userId) {
+            renderError 400, "Missing 'userId' parameter"
+            return
+        }
+
+        def authToken = session["shiroAuthToken"]
+        assert authToken, "There is no auth token in the session!"
+
+        def identity = new ShiroOAuthIdentity(
+                userId: params.userId,
+                username: authToken.principal,
+                provider: authToken.providerName).save()
+        if (!SecurityUtils.subject.authenticated) {
+            SecurityUtils.subject.login authToken
+        }
+
+        def targetUri = params.targetUri ?: session["targetUri"]
+        session.removeAttribute "shiroAuthToken"
+        session.removeAttribute "targetUri"
+        redirect uri: targetUri
     }
 
     protected renderError(code, msg) {
@@ -82,8 +102,9 @@ class ShiroOAuthController {
         render status: code, text: msg
     }
 
-    protected getProviderClass(oauthConfig, providerName) {
-        return getClass().classLoader.loadClass(oauthConfig.providers."${providerName}")
+    protected createAuthToken(providerName, scribeToken) {
+        def providerService = grailsApplication.mainContext.getBean("${providerName}ShiroOAuthService")
+        return providerService.createAuthToken(scribeToken)
     }
 }
 

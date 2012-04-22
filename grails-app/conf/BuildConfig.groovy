@@ -12,7 +12,7 @@ grails.project.dependency.resolution = {
         mavenCentral()
     }
     dependencies {
-        compile "org.apache.shiro:shiro-core:1.2.0"
+        compile "org.apache.shiro:shiro-core:1.1.0"
     }
 
     plugins {

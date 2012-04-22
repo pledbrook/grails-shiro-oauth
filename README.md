@@ -15,18 +15,20 @@ Most of the work is done by the other two plugins. The Scribe OAuth plugin provi
 * ShiroOAuthIdentity
 * ShiroOAuthController
 
-Shiro works on the basis of authentication tokens that contain the information that identifies a user. For example, there is a `UsernamePasswordToken` that contains a username and password. This is probably the most common one. The `OAuthToken` class is a Shiro authentication token, although one without any credentials. It wraps a Scribe access token from a successful OAuth authentication attempt. That's it.
+Shiro works on the basis of authentication tokens that contain the information that identifies a user. For example, there is a `UsernamePasswordToken` that contains a username and password. This is probably the most common one. The `OAuthToken` class is another type of Shiro authentication token, although one without any credentials. It wraps a Scribe access token from a successful OAuth authentication attempt. That's it.
 
-The `OAuthToken` isn't much use by itself because the standard OAuth response doesn't contain and form of identity for the user that just logged in. That's why the class is abstract. So the plugin also bundles provider-specific authentication tokens that extract the relevant information from the access token, such as a Twitter screen name in the case of `TwitterOAuthToken`.
+The `OAuthToken` isn't much use by itself because the standard OAuth response doesn't contain any form of identity for the user that just logged in. That's why the class is abstract. So the plugin also bundles provider-specific authentication tokens that extract the relevant information from the access token, such as a Twitter screen name in the case of `TwitterOAuthToken`.
 
-The realm, `OAuthRealm`, accepts instances of `OAuthToken` and checks whether the user has been linked to an internal Shiro user account (typically a `User` domain instance). The linking is done via the `ShiroOAuthIdentity` domain class, which contains the OAuth username and provider and which has a reference to the user account domain class.
+Some OAuth providers (Google and Facebook to name but two) don't include the credentials in the access token. Instead, you have to request the credentials from one of their APIs. This logic has been encapsulated in a set of `<provider>ShiroOAuthService` classes that get the user's credentials from the relevant URL and initialise the appropriate `OAuthToken`.
+
+The realm, `OAuthRealm`, accepts instances of `OAuthToken` and checks whether the user has been linked to an internal Shiro user account (typically a `User` domain instance). The linking is done via the `ShiroOAuthIdentity` domain class, which contains the OAuth username, provider name, and a reference to the user account domain class.
 
 Finally, we have the `ShiroOAuthController` which can be used as a URL for successful OAuth authentication. It wraps the Scribe access token in the appropriate `OAuthToken` and attempts to log the user in. If that's successful, i.e. the `OAuthRealm` finds a corresponding user account, the user is redirected back to whatever `targetUri` is set to. Otherwise, the user is redirected to an application-provided URL that will allow the user to link the OAuth account to an existing Shiro one or to a new Shiro account.
+
+`ShiroOAuthController` also has a `linkAccount` action that will create the `ShiroOAuthIdentity` record given an ID for the corresponding user domain instance. This has to be passed in as a `userId` parameter. If the user isn't already logged in, then this action will use the Shiro auth token in the session to log the user in and then redirect to whatever URL is specified by the `targetUri` parameter or session variable. Typically, users of the plugin should do an internal forward to this action once they have created or found the internal Shiro account.
 
 Left to do
 ----------
 
 * Allow multiple OAuth providers in a single application (requires changes in Scribe OAuth plugin).
-* Hide the `shiroOAuthToken` session attribute from applications and automatically remove it after successful logins.
 * Add more OAuth tokens (Facebook, Google, GitHub, LinkedIn, etc.).
-* Provide a default `security.shiro.oauth.providers` map of provider names -> auth token classes.
