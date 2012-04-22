@@ -22,7 +22,7 @@ class ShiroOauthGrailsPlugin {
     def author = "Peter Ledbrook"
     def authorEmail = "p.ledbrook@cacoethes.co.uk"
     def description = """\
-Adds OAuth-based authentication to the [Shiro plugin](http://grails.org/plugin/shiro) using the [Scribe OAuth plugin](http://grails.org/plugin/oauth-scribe). This plugin provides an OAuth realm that can easily be integrated into existing applications and a host of utility functions to make things like "log in with Twitter" almost trivial.
+Adds OAuth-based authentication to the [Shiro plugin|http://grails.org/plugin/shiro] using the [Scribe OAuth plugin|http://grails.org/plugin/oauth-scribe]. This plugin provides an OAuth realm that can easily be integrated into existing applications and a host of utility functions to make things like "log in with Twitter" almost trivial.
 """
 
     def documentation = "http://pledbrook.github.com/grails-shiro-oauth/"
