@@ -17,7 +17,6 @@ package grails.plugin.shiro.oauth
 
 import org.apache.shiro.SecurityUtils
 import org.apache.shiro.authc.AuthenticationException
-import static uk.co.desirableobjects.oauth.scribe.OauthService.ACCESS_TOKEN_SESSION_KEY as TOKEN_KEY
 
 /**
  * Simple helper controller for handling OAuth authentication and integrating it
@@ -25,6 +24,7 @@ import static uk.co.desirableobjects.oauth.scribe.OauthService.ACCESS_TOKEN_SESS
  */
 class ShiroOAuthController {
     def grailsApplication
+    def oauthService
 
     /**
      * This can be used as a callback for a successful OAuth authentication
@@ -44,13 +44,14 @@ class ShiroOAuthController {
             return
         }
 
-        if (!session[TOKEN_KEY]) {
-            renderError 500, "No OAuth token in the session!"
+        def sessionKey = oauthService.findSessionKeyForAccessToken(params.provider)
+        if (!session[sessionKey]) {
+            renderError 500, "No OAuth token in the session for provider '${params.provider}'!"
             return
         }
 
         // Create the relevant authentication token and attempt to log in.
-        def authToken = createAuthToken(params.provider, session[TOKEN_KEY])
+        def authToken = createAuthToken(params.provider, session[sessionKey])
         def targetUri = params.targetUri ?: session.targetUri
 
         try {
@@ -83,10 +84,10 @@ class ShiroOAuthController {
         def authToken = session["shiroAuthToken"]
         assert authToken, "There is no auth token in the session!"
 
-        def identity = new ShiroOAuthIdentity(
+        new ShiroOAuthIdentity(
                 userId: params.userId,
                 username: authToken.principal,
-                provider: authToken.providerName).save()
+                provider: authToken.providerName).save(failOnError: true)
         if (!SecurityUtils.subject.authenticated) {
             SecurityUtils.subject.login authToken
         }

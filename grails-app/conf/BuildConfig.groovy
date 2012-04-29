@@ -16,6 +16,6 @@ grails.project.dependency.resolution = {
     }
 
     plugins {
-        compile ":shiro:1.1.3", ":oauth-scribe:1.3"
+        compile ":shiro:1.1.3", ":oauth:2.0.1"
     }
 }
