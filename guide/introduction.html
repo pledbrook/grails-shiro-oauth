@@ -2,7 +2,7 @@
                       "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
-    <title>1 Introduction 0.1</title>
+    <title>1 Introduction 0.2</title>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <link rel="stylesheet" href="../css/main.css" type="text/css" media="screen, print" title="Style" charset="utf-8"/>
     <link rel="stylesheet" href="../css/pdf.css" type="text/css" media="print" title="PDF" charset="utf-8"/>
@@ -40,7 +40,7 @@ function addJsClass() {
         
         
     </div>
-    <p>Adds OAuth-based authentication to the [Shiro plugin|http://grails.org/plugin/shiro] using the [Scribe OAuth plugin|http://grails.org/plugin/oauth-scribe]. This plugin provides an OAuth realm that can easily be integrated into existing applications and a host of utility functions to make things like &quot;log in with Twitter&quot; almost trivial.
+    <p>Adds OAuth-based authentication to the [Shiro plugin|http://grails.org/plugin/shiro] using the [OAuth plugin|http://grails.org/plugin/oauth-scribe]. This plugin provides an OAuth realm that can easily be integrated into existing applications and a host of utility functions to make things like &quot;log in with Twitter&quot; almost trivial.
 </p>
 </div>
 
@@ -62,7 +62,7 @@ function addJsClass() {
 
                     <p><strong>Authors:</strong> Peter Ledbrook</p>
 
-                    <p><strong>Version:</strong> 0.1</p>
+                    <p><strong>Version:</strong> 0.2</p>
 
                     
                 </div>
@@ -73,19 +73,25 @@ function addJsClass() {
 
 <h1 id="introduction">1 Introduction</h1>
 Welcome to the Shiro OAuth plugin for Grails! If you're using the <a href="http://grails.org/plugin/shiro" target="blank">core Shiro plugin</a> in your application already and you want easy authentication via Twitter, Facebook, et al. then this is the plugin for you. It simplifies the integration of OAuth authentication via the <a href="http://grails.org/plugin/oauth-scribe" target="blank">Scribe OAuth plugin</a> into the Shiro security framework.<p class="paragraph"/><h2>Getting Started</h2><p class="paragraph"/>Start by adding the plugin as a dependency to <code>BuildConfig.groovy</code>:<p class="paragraph"/><div class="code"><pre>plugins &#123;
-    compile <span class="java&#45;quote">"&#58;shiro&#45;oauth&#58;0.1"</span>
+    compile <span class="java&#45;quote">"&#58;shiro&#45;oauth&#58;0.2"</span>
 &#125;</pre></div><p class="paragraph"/>You can find the dependency declaration for the latest version on the <a href="http://grails.org/plugin/shiro-oauth" target="blank">plugin portal page</a>. Next up is a little bit of configuration. Add the OAuth provider configuration to your <code>Config.groovy</code> file:<p class="paragraph"/><div class="code"><pre>oauth &#123;
-    provider = org.scribe.builder.api.TwitterApi
-    key = 'consumer key'
-    secret = 'consumer secret'
-    callback = <span class="java&#45;quote">"$&#123;grails.serverURL&#125;/oauth/callback"</span>
-    successUri = '/oauth/success?provider=twitter'
-    failureUri = '/unauthorized'
-&#125;<p class="paragraph"/>security.shiro.oauth.linkAccountUrl = <span class="java&#45;quote">"/oauth/linkaccount"</span></pre></div><p class="paragraph"/>The first block is the configuration for the <a href="http://grails.org/plugin/oauth-scribe" target="blank">Scribe OAuth plugin</a> so check its documentation for more details. At this moment in time, the Scribe OAuth plugin only supports one provider at a time. This will be resolved in a future version of the plugin.<p class="paragraph"/>You can put your own URL in there for <code>successUri</code>, but make sure that it maps to the <code>ShiroOAuthController</code>'s <code>onSuccess</code> action and that the <code>provider</code> URL parameter is included. Use whatever you want for the <code>failureUri</code> setting. The <code>callback</code> URL should map to the <code>OauthController</code>'s <code>callback</code> action (note the different captitalisation of the controller name) and must be an absolute URL. For example:<p class="paragraph"/><div class="code"><pre><span class="java&#45;quote">"/oauth/success"</span>(controller: <span class="java&#45;quote">"shiroOAuth"</span>, action: <span class="java&#45;quote">"onSuccess"</span>)
-<span class="java&#45;quote">"/oauth/callback"</span>(controller: <span class="java&#45;quote">"oauth"</span>, action: <span class="java&#45;quote">"callback"</span>)</pre></div><p class="paragraph"/>The second configuration block is specifically for this plugin. The <code>linkAccountUrl</code> should map to a page that allows users to link their OAuth identities to internal Shiro accounts. You have to code this page yourself, but once you have a reference to an internal Shiro account, be it a new one or an existing one, then you can forward the request to another action provided by the plugin:<p class="paragraph"/><div class="code"><pre>def linkAccount() &#123;
+    providers &#123;
+        twitter &#123;
+            provider = org.scribe.builder.api.TwitterApi
+            key = 'consumer key'
+            secret = 'consumer secret'
+            callback = <span class="java&#45;quote">"$&#123;grails.serverURL&#125;/oauth/twitter/callback"</span>
+            successUri = '/oauth/success?provider=twitter'
+            failureUri = '/unauthorized'
+        &#125;<p class="paragraph"/>        facebook &#123;
+            &#8230;
+        &#125;
+    &#125;
+&#125;<p class="paragraph"/>security.shiro.oauth.linkAccountUrl = <span class="java&#45;quote">"/oauth/linkaccount"</span></pre></div><p class="paragraph"/>The first block is the configuration for the <a href="http://grails.org/plugin/oauth-scribe" target="blank">OAuth plugin</a> so check its documentation for more details. This plugin allows you to define configuration for 'twitter', 'facebook' and 'google', but you can also define your own (docs to be added).<p class="paragraph"/>You can put your own URL in there for <code>successUri</code>, but make sure that it maps to the <code>ShiroOAuthController</code>'s <code>onSuccess</code> action and that the <code>provider</code> URL parameter is included. Use whatever you want for the <code>failureUri</code> setting.<p class="paragraph"/>For the <code>callback</code> URL, we recommend <code>/oauth/&#60;provider&#62;/callback</code> which automatically maps to the <code>OauthController</code>'s <code>callback</code> action (note the different capitalisation of the controller name). Note htat it must be an absolute URL. IIf you want to map your own URL, make sure to include the <code>provider</code> parameter:<p class="paragraph"/><div class="code"><pre><span class="java&#45;quote">"/oauth/success"</span>(controller: <span class="java&#45;quote">"shiroOAuth"</span>, action: <span class="java&#45;quote">"onSuccess"</span>)
+<span class="java&#45;quote">"/oauth/callback/$provider"</span>(controller: <span class="java&#45;quote">"oauth"</span>, action: <span class="java&#45;quote">"callback"</span>)</pre></div><p class="paragraph"/>The second configuration block, <code>security.shiro.oauth.&#42;</code> is specifically for this plugin. The <code>linkAccountUrl</code> should map to a page that allows users to link their OAuth identities to internal Shiro accounts. You have to code this page yourself, but once you have a reference to an internal Shiro account, be it a new one or an existing one, then you can forward the request to another action provided by the plugin:<p class="paragraph"/><div class="code"><pre>def linkAccount() &#123;
     def user = &#8230;
     forward controller: <span class="java&#45;quote">"shiroOAuth"</span>, action: <span class="java&#45;quote">"linkAccount"</span>, params: &#91;userId: user.id&#93;
-&#125;</pre></div><p class="paragraph"/>The above will link the OAuth account to the internal Shiro one automatically and then log the user in (if he or she hasn't already been authenticated by this stage). Finally, it will redirect to the URL specified by either the `targetUri` parameter or if that doesn't exist, the `targetUri` session variable.<p class="paragraph"/>If you choose to handle this yourself, note that the Shiro OAuth plugin puts the OAuth authentication token into the session under the key 'shiroAuthToken'. This should be removed from the session after a successful `subject.login()`.<p class="paragraph"/>Finally, you need to allow the user to log in via an OAuth provider. The easiest way to do this is to add a link to your login page:<p class="paragraph"/><div class="code"><pre><span class="xml&#45;tag">&#60;oauth:connect&#62;</span>Log in with Twitter<span class="xml&#45;tag">&#60;/oauth:connect&#62;</span></pre></div><p class="paragraph"/>This tag is provided by the Scribe OAuth plugin. When the user clicks on the link, he or she will be redirected to the configured OAuth provider. If the user already has a linked account, he or she will be automatically logged in. Otherwise, he or she will be taken to the "link an account" page.
+&#125;</pre></div><p class="paragraph"/>The above will link the OAuth account to the internal Shiro one automatically and then log the user in (if he or she hasn't already been authenticated by this stage). Finally, it will redirect to the URL specified by either the `targetUri` parameter or if that doesn't exist, the `targetUri` session variable.<p class="paragraph"/>If you choose to handle this yourself, note that the Shiro OAuth plugin puts the OAuth authentication token into the session under the key 'shiroAuthToken'. This should be removed from the session after a successful `subject.login()`.<p class="paragraph"/>Finally, you need to allow the user to log in via an OAuth provider. The easiest way to do this is to add a link to your login page:<p class="paragraph"/><div class="code"><pre><span class="xml&#45;tag">&#60;oauth:connect provider=<span class="xml&#45;quote">"twitter"</span>&#62;</span>Log in with Twitter<span class="xml&#45;tag">&#60;/oauth:connect&#62;</span></pre></div><p class="paragraph"/>This tag is provided by the OAuth plugin. When the user clicks on the link, he or she will be redirected to the configured OAuth provider. If the user already has a linked account, he or she will be automatically logged in. Otherwise, he or she will be taken to the "link an account" page.
 
 
 
