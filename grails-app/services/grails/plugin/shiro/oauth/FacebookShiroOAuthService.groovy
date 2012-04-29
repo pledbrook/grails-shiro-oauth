@@ -24,8 +24,8 @@ class FacebookShiroOAuthService {
     def oauthService
 
     def createAuthToken(accessToken) {
-        def response = oauthService.getResource(accessToken, "https://graph.facebook.com/me")
+        def response = oauthService.getFacebookResource(accessToken, "https://graph.facebook.com/me")
         def user = JSON.parse(response.body)
-        return new FacebookOAuthToken(accessToken, user.username)
+        return new FacebookOAuthToken(accessToken, user.name)
     }
 }

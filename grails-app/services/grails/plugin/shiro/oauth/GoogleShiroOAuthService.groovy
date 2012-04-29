@@ -15,6 +15,8 @@
  */
 package grails.plugin.shiro.oauth
 
+import grails.converters.JSON
+
 /**
  *
  */
@@ -23,8 +25,8 @@ class GoogleShiroOAuthService {
 
     def createAuthToken(accessToken) {
         // Requires scope of "https://www.googleapis.com/auth/userinfo.email"
-        def response = oauthService.getResource(accessToken, "https://www.googleapis.com/oauth2/v1/userinfo")
+        def response = oauthService.getGoogleResource(accessToken, "https://www.googleapis.com/oauth2/v1/userinfo")
         def user = JSON.parse(response.body)
-        return new GoogleOAuthToken(accessToken, user.email)
+        return new GoogleOAuthToken(accessToken, user.name)
     }
 }
