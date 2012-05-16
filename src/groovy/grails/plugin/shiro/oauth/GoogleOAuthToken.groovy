@@ -20,7 +20,7 @@ package grails.plugin.shiro.oauth
  * that returns the Google email address as the principal.
  */
 class GoogleOAuthToken extends OAuthToken {
-    static final String PROVIDER_NAME = "facebook"
+    static final String PROVIDER_NAME = "google"
 
     def email
 
