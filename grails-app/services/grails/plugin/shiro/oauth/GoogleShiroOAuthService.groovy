@@ -27,6 +27,6 @@ class GoogleShiroOAuthService {
         // Requires scope of "https://www.googleapis.com/auth/userinfo.email"
         def response = oauthService.getGoogleResource(accessToken, "https://www.googleapis.com/oauth2/v1/userinfo")
         def user = JSON.parse(response.body)
-        return new GoogleOAuthToken(accessToken, user.name)
+        return new GoogleOAuthToken(accessToken, user.email)
     }
 }
