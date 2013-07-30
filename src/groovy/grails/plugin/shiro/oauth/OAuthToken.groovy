@@ -25,7 +25,7 @@ import org.apache.shiro.authc.AuthenticationToken
  */
 abstract class OAuthToken implements AuthenticationToken {
     private scribeToken
-    private tokenParams
+    private Map tokenParams
 
     /**
      * Initialises the token from a Scribe access token.
@@ -50,9 +50,20 @@ abstract class OAuthToken implements AuthenticationToken {
     /**
      * Returns the parameters in the OAuth access token as a map.
      */
-    protected final getParameters() { return Collections.unmodifiableMap(tokenParams) }
+    protected final Map getParameters() { return Collections.unmodifiableMap(tokenParams) }
 
-    private extractParameters(String data) {
-        return data.split('&').collectEntries { it.split('=') as List }
+    private Map extractParameters(String data) {
+        // Ideally we'd use collectEntries here, but it was only added in
+        // Groovy 1.7.9 and so doesn't work with Grails 1.3.x.
+        def result = [:]
+        if (!data) return result
+
+        def parameterStrings = data.split('&')
+        for (param in parameterStrings) {
+            def pair = param.split('=')
+            result[pair[0]] = pair[1]
+        }
+
+        return result
     }
 }
