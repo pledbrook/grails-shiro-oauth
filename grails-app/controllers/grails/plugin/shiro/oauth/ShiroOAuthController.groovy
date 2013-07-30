@@ -17,6 +17,7 @@ package grails.plugin.shiro.oauth
 
 import org.apache.shiro.SecurityUtils
 import org.apache.shiro.authc.AuthenticationException
+import org.apache.shiro.authc.UsernamePasswordToken
 
 /**
  * Simple helper controller for handling OAuth authentication and integrating it
@@ -76,8 +77,17 @@ class ShiroOAuthController {
     }
 
     def linkAccount = {
-        if (!params.userId) {
-            renderError 400, "Missing 'userId' parameter"
+        def subject = SecurityUtils.subject
+        if (params.username && params.password) {
+            try {
+                subject.login new UsernamePasswordToken(params.username, params.password, false)
+            }
+            catch (AuthenticationException ex) {
+                renderError 401, "Username and password do not match an existing account"
+            }
+        }
+        else if (!subject.authenticated) {
+            renderError 400, "No username & password provided and the user is not currently authenticated"
             return
         }
 
@@ -85,12 +95,9 @@ class ShiroOAuthController {
         assert authToken, "There is no auth token in the session!"
 
         new ShiroOAuthIdentity(
-                userId: params.userId,
+                userId: subject.principals.oneByType(Long),
                 username: authToken.principal,
                 provider: authToken.providerName).save(failOnError: true)
-        if (!SecurityUtils.subject.authenticated) {
-            SecurityUtils.subject.login authToken
-        }
 
         def targetUri = params.targetUri ?: session["targetUri"]
         session.removeAttribute "shiroAuthToken"
