@@ -8,3 +8,16 @@
 //
 //    ant.mkdir(dir:"${basedir}/grails-app/jobs")
 //
+println """\
+WARNING
+
+Version 0.3 of the shiro-oauth plugin introduces a breaking change. The
+`OAuthController.linkAccount` action no longer accepts a `userId` parameter.
+Instead, you can:
+
+* Pass `username` and `password` parameters for the account to link to.
+* Pre-authenticate the target account (via `subject.login()`) before forwarding
+  to the `linkAccount` action.
+
+This breaking change was required to fix a security hole.
+"""
