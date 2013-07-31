@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 class ShiroOauthGrailsPlugin {
-    def version = "0.2"
+    def version = "0.3"
     def grailsVersion = "1.3.3 > *"
     def dependsOn = [shiro: "1.0 > *", oauth: "2.0 > *"]
 
