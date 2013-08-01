@@ -37,25 +37,34 @@ The first block is the configuration for the [OAuth plugin|http://grails.org/plu
 
 You can put your own URL in there for @successUri@, but make sure that it maps to the @ShiroOAuthController@'s @onSuccess@ action and that the @provider@ URL parameter is included. Use whatever you want for the @failureUri@ setting.
 
-For the @callback@ URL, we recommend @/oauth/<provider>/callback@ which automatically maps to the @OauthController@'s @callback@ action (note the different capitalisation of the controller name). Note htat it must be an absolute URL. IIf you want to map your own URL, make sure to include the @provider@ parameter:
+For the @callback@ URL, we recommend @/oauth/<provider>/callback@ which automatically maps to the @OauthController@'s @callback@ action (note the different capitalisation of the controller name). Note that it must be an absolute URL. If you want to map your own URL, make sure to include the @provider@ parameter:
 
 {code}
 "/oauth/success"(controller: "shiroOAuth", action: "onSuccess")
 "/oauth/callback/$provider"(controller: "oauth", action: "callback")
 {code}
 
-The second configuration block, @security.shiro.oauth.\*@ is specifically for this plugin. The @linkAccountUrl@ should map to a page that allows users to link their OAuth identities to internal Shiro accounts. You have to code this page yourself, but once you have a reference to an internal Shiro account, be it a new one or an existing one, then you can forward the request to another action provided by the plugin:
+The second configuration block, @security.shiro.oauth.\*@ is specifically for this plugin. The @linkAccountUrl@ should map to a page that allows users to link their OAuth identities to internal Shiro accounts. You have to code this page yourself, but once you have the username and password for an internal Shiro account, be it a new one or an existing one, then you can forward the request to another action provided by the plugin:
 
 {code}
 def linkAccount() {
     def user = ...
-    forward controller: "shiroOAuth", action: "linkAccount", params: [userId: user.id]
+    forward controller: "shiroOAuth", action: "linkAccount", params: [username: params.username, password: params.password]
 }
 {code}
 
-The above will link the OAuth account to the internal Shiro one automatically and then log the user in (if he or she hasn't already been authenticated by this stage). Finally, it will redirect to the URL specified by either the `targetUri` parameter or if that doesn't exist, the `targetUri` session variable.
+The above will link the OAuth account to the internal Shiro one automatically after using the given credentials to authenticate the internal account. Finally, it will redirect to the URL specified by either the `targetUri` parameter or if that doesn't exist, the `targetUri` session variable.
 
-If you choose to handle this yourself, note that the Shiro OAuth plugin puts the OAuth authentication token into the session under the key 'shiroAuthToken'. This should be removed from the session after a successful `subject.login()`.
+You can also pre-authenticate the target Shiro user account if for some reason you can't pass in the username and password. For example:
+
+{code}
+def linkAccount() {
+    SecurityUtils.subject.login params.username, params.password
+    forward controller: "shiroOAuth", action: "linkAccount"
+}
+{code}
+
+If you choose to handle the linking yourself, note that the Shiro OAuth plugin puts the OAuth authentication token into the session under the key 'shiroAuthToken'. This should be removed from the session after a successful `subject.login()`.
 
 Finally, you need to allow the user to log in via an OAuth provider. The easiest way to do this is to add a link to your login page:
 
