@@ -25,10 +25,9 @@ The realm, `OAuthRealm`, accepts instances of `OAuthToken` and checks whether th
 
 Finally, we have the `ShiroOAuthController` which can be used as a URL for successful OAuth authentication. It wraps the Scribe access token in the appropriate `OAuthToken` and attempts to log the user in. If that's successful, i.e. the `OAuthRealm` finds a corresponding user account, the user is redirected back to whatever `targetUri` is set to. Otherwise, the user is redirected to an application-provided URL that will allow the user to link the OAuth account to an existing Shiro one or to a new Shiro account.
 
-`ShiroOAuthController` also has a `linkAccount` action that will create the `ShiroOAuthIdentity` record given an ID for the corresponding user domain instance. This has to be passed in as a `userId` parameter. If the user isn't already logged in, then this action will use the Shiro auth token in the session to log the user in and then redirect to whatever URL is specified by the `targetUri` parameter or session variable. Typically, users of the plugin should do an internal forward to this action once they have created or found the internal Shiro account.
+`ShiroOAuthController` also has a `linkAccount` action that will create the `ShiroOAuthIdentity` record, thus linking the OAuth identity to an internal Shiro user account. You typically create your own action to handle a account-linking form and then forward the request to `linkAccount` at the end of that action. `linkAccount` itself requires either `username` and `password` parameters so that it can authenticate the internal Shiro account, or you must authenticate that account before forwarding the request.
 
 Left to do
 ----------
 
-* Allow multiple OAuth providers in a single application (requires changes in Scribe OAuth plugin).
-* Add more OAuth tokens (Facebook, Google, GitHub, LinkedIn, etc.).
+* Add more OAuth tokens (GitHub, LinkedIn, etc.).
